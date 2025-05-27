@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flip 7</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    .players {
+      margin-bottom: 20px;
+    }
+    .player {
+      display: inline-block;
+      margin: 10px;
+      padding: 10px;
+      border: 2px solid gray;
+      border-radius: 10px;
+      min-width: 120px;
+    }
+    .player.selected {
+      border-color: blue;
+      background-color: #eef;
+    }
+    .buttons {
+      margin-top: 20px;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Score Tracker</h1>
+
+<div class="players">
+  <div class="player selected" id="player0" onclick="selectPlayer(0)">Alica<br><span id="score0">0</span></div>
+  <div class="player" id="player1" onclick="selectPlayer(1)">Bernd<br><span id="score1">0</span></div>
+  <div class="player" id="player2" onclick="selectPlayer(2)">Jonas<br><span id="score2">0</span></div>
+  <div class="player" id="player3" onclick="selectPlayer(3)">Mattis<br><span id="score3">0</span></div>
+</div>
+
+<div class="buttons">
+  <div>
+    <button onclick="addPoints(1)">1</button>
+    <button onclick="addPoints(2)">2</button>
+    <button onclick="addPoints(3)">3</button>
+    <button onclick="addPoints(4)">4</button>
+    <button onclick="addPoints(5)">5</button>
+    <button onclick="addPoints(6)">6</button>
+    <button onclick="addPoints(7)">7</button>
+    <button onclick="addPoints(8)">8</button>
+    <button onclick="addPoints(9)">9</button>
+  </div>
+  <div>
+    <button onclick="addPoints(10)">10</button>
+    <button onclick="addPoints(20)">20</button>
+    <button onclick="addPoints(30)">30</button>
+    <button onclick="addPoints(40)">40</button>
+    <button onclick="addPoints(50)">50</button>
+  </div>
+</div>
+
+<script>
+  let scores = [0, 0, 0, 0];
+  let currentPlayer = 0;
+
+  function selectPlayer(index) {
+    currentPlayer = index;
+    for (let i = 0; i < 4; i++) {
+      document.getElementById(`player${i}`).classList.remove("selected");
+    }
+    document.getElementById(`player${index}`).classList.add("selected");
+  }
+
+  function addPoints(points) {
+    scores[currentPlayer] += points;
+    document.getElementById(`score${currentPlayer}`).innerText = scores[currentPlayer];
+  }
+</script>
+
+</body>
+</html>
