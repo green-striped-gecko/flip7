@@ -2,85 +2,222 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Flip 7</title>
+  <title>Fun Score Tracker</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f7faff;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
       text-align: center;
     }
-    .players {
+
+    h1 {
+      color: #2c3e50;
       margin-bottom: 20px;
     }
+
     .player {
-      display: inline-block;
-      margin: 10px;
-      padding: 10px;
-      border: 2px solid gray;
-      border-radius: 10px;
-      min-width: 120px;
+      border: 3px solid #ccc;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+      position: relative;
+      text-align: left;
     }
-    .player.selected {
-      border-color: blue;
-      background-color: #eef;
+
+    .selected {
+      border-color: #3498db;
+      background-color: #e8f4fd;
     }
-    .buttons {
-      margin-top: 20px;
+
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    button {
-      margin: 5px;
-      padding: 10px 15px;
+
+    .score-line {
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .queued-points {
       font-size: 16px;
+      color: #27ae60;
+      margin-top: 5px;
+    }
+
+    .add-button {
+      background-color: #e17055;
+      border: none;
+      color: white;
+      font-size: 20px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .add-button:hover {
+      background-color: #d35400;
+    }
+
+    .quick-buttons {
+      margin-top: 10px;
+    }
+
+    .quick-buttons button {
+      width: 48px;
+      padding: 6px;
+      margin: 2px;
+      border-radius: 8px;
+      background-color: #6c5ce7;
+      color: white;
+      border: none;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+
+    .quick-buttons button:hover {
+      background-color: #4834d4;
+    }
+
+    .bottom-buttons {
+      margin-top: 30px;
+    }
+
+    .bottom-buttons button, .controls button {
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: none;
+      background-color: #00b894;
+      color: white;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    .bottom-buttons button:hover, .controls button:hover {
+      background-color: #019875;
+    }
+
+    .undo-button {
+      background-color: #636e72;
+    }
+
+    .undo-button:hover {
+      background-color: #2d3436;
     }
   </style>
 </head>
 <body>
 
-<h1>Score Tracker</h1>
+<h1>🎉 Fun Score Tracker 🎉</h1>
 
-<div class="players">
-  <div class="player selected" id="player0" onclick="selectPlayer(0)">Alica<br><span id="score0">0</span></div>
-  <div class="player" id="player1" onclick="selectPlayer(1)">Bernd<br><span id="score1">0</span></div>
-  <div class="player" id="player2" onclick="selectPlayer(2)">Jonas<br><span id="score2">0</span></div>
-  <div class="player" id="player3" onclick="selectPlayer(3)">Mattis<br><span id="score3">0</span></div>
+<div id="players"></div>
+
+<div class="controls">
+  <button class="undo-button" onclick="undo()">↩️ Undo</button>
 </div>
 
-<div class="buttons">
-  <div>
-    <button onclick="addPoints(1)">1</button>
-    <button onclick="addPoints(2)">2</button>
-    <button onclick="addPoints(3)">3</button>
-    <button onclick="addPoints(4)">4</button>
-    <button onclick="addPoints(5)">5</button>
-    <button onclick="addPoints(6)">6</button>
-    <button onclick="addPoints(7)">7</button>
-    <button onclick="addPoints(8)">8</button>
-    <button onclick="addPoints(9)">9</button>
-  </div>
-  <div>
-    <button onclick="addPoints(10)">10</button>
-    <button onclick="addPoints(20)">20</button>
-    <button onclick="addPoints(30)">30</button>
-    <button onclick="addPoints(40)">40</button>
-    <button onclick="addPoints(50)">50</button>
-  </div>
+<div class="bottom-buttons">
+  <button onclick="resetAll()">🔄 Reset All</button>
 </div>
 
 <script>
-  let scores = [0, 0, 0, 0];
+  const numPlayers = 4;
+  let scores = Array(numPlayers).fill(0);
+  let queues = Array(numPlayers).fill().map(() => []);
+  let history = Array(numPlayers).fill().map(() => []);
   let currentPlayer = 0;
+
+  const playersContainer = document.getElementById("players");
+
+  function renderPlayers() {
+    playersContainer.innerHTML = '';
+    for (let i = 0; i < numPlayers; i++) {
+      const playerDiv = document.createElement("div");
+      playerDiv.className = "player" + (i === currentPlayer ? " selected" : "");
+      playerDiv.id = `player${i}`;
+      playerDiv.onclick = () => selectPlayer(i);
+
+      playerDiv.innerHTML = `
+        <div class="score-header">
+          <strong>Player ${i + 1}</strong>
+          <button class="add-button" onclick="applyQueuedToPlayer(event, ${i})">+</button>
+        </div>
+        <div class="score-line"><span id="score${i}">${scores[i]}</span></div>
+        <div class="queued-points" id="queued${i}"></div>
+        <div class="quick-buttons">
+          ${[...Array(12)].map((_, v) => `<button onclick="queuePoints(event, ${i}, ${v + 1})">${v + 1}</button>`).join('')}
+          <button onclick="doubleQueued(event, ${i})">×2</button>
+        </div>
+      `;
+      playersContainer.appendChild(playerDiv);
+    }
+    updateQueuedDisplays();
+  }
 
   function selectPlayer(index) {
     currentPlayer = index;
-    for (let i = 0; i < 4; i++) {
-      document.getElementById(`player${i}`).classList.remove("selected");
-    }
-    document.getElementById(`player${index}`).classList.add("selected");
+    renderPlayers();
   }
 
-  function addPoints(points) {
-    scores[currentPlayer] += points;
-    document.getElementById(`score${currentPlayer}`).innerText = scores[currentPlayer];
+  function queuePoints(e, player, val) {
+    e.stopPropagation();
+    queues[player].push(val);
+    updateQueuedDisplays();
   }
+
+  function doubleQueued(e, player) {
+    e.stopPropagation();
+    queues[player] = queues[player].map(p => p * 2);
+    updateQueuedDisplays();
+  }
+
+  function updateQueuedDisplays() {
+    for (let i = 0; i < numPlayers; i++) {
+      const q = queues[i];
+      const qEl = document.getElementById(`queued${i}`);
+      qEl.innerText = q.length > 0 ? `+ ${q.join(' + ')}` : '';
+    }
+  }
+
+  function applyQueuedToPlayer(e, index) {
+    e.stopPropagation();
+    const total = queues[index].reduce((a, b) => a + b, 0);
+    if (total === 0) return;
+    scores[index] += total;
+    history[index].push(total);
+    queues[index] = [];
+    document.getElementById(`score${index}`).innerText = scores[index];
+    updateQueuedDisplays();
+    currentPlayer = (index + 1) % numPlayers;
+    renderPlayers();
+  }
+
+  function undo() {
+    const last = history[currentPlayer].pop();
+    if (last !== undefined) {
+      scores[currentPlayer] -= last;
+      document.getElementById(`score${currentPlayer}`).innerText = scores[currentPlayer];
+    }
+  }
+
+  function resetAll() {
+    scores = Array(numPlayers).fill(0);
+    queues = Array(numPlayers).fill().map(() => []);
+    history = Array(numPlayers).fill().map(() => []);
+    renderPlayers();
+  }
+
+  renderPlayers();
 </script>
 
 </body>
