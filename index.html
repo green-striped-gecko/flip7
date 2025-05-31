@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Score Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { box-sizing: border-box; }
@@ -32,6 +31,10 @@
     .player.selected {
       border-color: #3498db;
       background-color: #e8f4fd;
+    }
+    .player.winner {
+      background-color: #d4edda;
+      border-color: #28a745;
     }
     .player-header {
       display: flex;
@@ -117,7 +120,7 @@
 </head>
 <body>
 
-<audio id="clickSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+<audio id="clickSound" src="https://freesound.org/data/previews/522/522146_11601056-lq.mp3"></audio>
 
 <div class="players-column" id="players"></div>
 <div class="action-buttons">
@@ -142,10 +145,16 @@
     const container = document.getElementById("players");
     container.innerHTML = '';
 
+    const maxScore = Math.max(...scores);
+    const winners = scores.map((s, i) => s >= 200 && s === maxScore ? i : -1).filter(i => i !== -1);
+
     for (let i = 0; i < playerNames.length; i++) {
       const div = document.createElement("div");
-      div.className = "player" + (i === currentPlayer ? " selected" : "");
-      div.onclick = () => selectPlayer(i);
+      div.className = "player" + (i === currentPlayer ? " selected" : "") + (winners.includes(i) ? " winner" : "");
+      div.onclick = (e) => {
+        e.stopPropagation();
+        selectPlayer(i);
+      };
 
       div.innerHTML = `
         <div class="player-header">
@@ -306,6 +315,14 @@
       alert("At least one player must remain.");
     }
   }
+
+  document.body.addEventListener("click", (e) => {
+    const isButton = e.target.closest("button");
+    if (!isButton) {
+      queue = [];
+      updateQueuedDisplay();
+    }
+  });
 
   renderPlayers();
 </script>
