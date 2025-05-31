@@ -35,10 +35,8 @@
       padding: 6px;
       background: #fff;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 6px;
       flex-direction: column;
+      gap: 6px;
     }
 
     .player.selected {
@@ -46,10 +44,18 @@
       background-color: #e8f4fd;
     }
 
-    .player-info {
+    .player-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       width: 100%;
+    }
+
+    .player-info {
+      flex-grow: 1;
       font-size: 0.95em;
       text-align: left;
+      padding: 0 10px;
     }
 
     .score-line {
@@ -98,15 +104,15 @@
       color: white;
       border: none;
       cursor: pointer;
-      transition: transform 0.1s ease;
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
     }
 
     .button-grid button:active,
     .double-button button:active,
     .action-buttons button:active,
     .player-manage-buttons button:active {
-      transform: scale(0.95);
-      background-color: #341f97;
+      transform: scale(0.93);
+      box-shadow: 0 0 0 4px #a29bfe;
     }
 
     .double-button,
@@ -147,12 +153,14 @@
   function renderPlayers() {
     const container = document.getElementById("players");
     container.innerHTML = '';
+
     for (let i = 0; i < playerNames.length; i++) {
       const div = document.createElement("div");
       div.className = "player" + (i === currentPlayer ? " selected" : "");
       div.onclick = () => selectPlayer(i);
+
       div.innerHTML = `
-        <div style="display: flex; justify-content: space-between; width: 100%;">
+        <div class="player-header">
           <button class="btn-action btn-delete" onclick="deleteLast(event)">−</button>
           <div class="player-info">
             <strong>${playerNames[i]}</strong>
@@ -162,20 +170,22 @@
           <button class="btn-action btn-add" onclick="applyPoints(event)">+</button>
         </div>
       `;
+
       if (i === currentPlayer) {
         const buttonGrid = document.createElement("div");
         buttonGrid.className = "button-grid";
         for (let j = 1; j <= 12; j++) {
           const btn = document.createElement("button");
           btn.textContent = j;
-          btn.onclick = () => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
             addToQueue(j);
-            try { navigator.vibrate(30); } catch (e) {}
           };
           buttonGrid.appendChild(btn);
         }
         div.appendChild(buttonGrid);
       }
+
       container.appendChild(div);
     }
     updateQueuedDisplay();
@@ -187,7 +197,6 @@
   }
 
   function doubleQueue() {
-    try { navigator.vibrate(50); } catch (e) {}
     queue = queue.map(x => x * 2);
     updateQueuedDisplay();
   }
