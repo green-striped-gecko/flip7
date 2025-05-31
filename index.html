@@ -16,7 +16,8 @@
 
     .main-container {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      align-items: center;
       gap: 10px;
     }
 
@@ -24,17 +25,8 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      flex: 1;
-      min-width: 200px;
-      max-width: 350px;
-    }
-
-    .button-panel-column {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex: 0 0 170px;
-      gap: 8px;
+      width: 100%;
+      max-width: 500px;
     }
 
     .player {
@@ -104,13 +96,15 @@
       color: white;
       border: none;
       cursor: pointer;
+      transition: transform 0.1s ease;
     }
 
-    .button-grid button:hover,
-    .double-button button:hover,
-    .action-buttons button:hover,
-    .player-manage-buttons button:hover {
-      background-color: #4834d4;
+    .button-grid button:active,
+    .double-button button:active,
+    .action-buttons button:active,
+    .player-manage-buttons button:active {
+      transform: scale(0.95);
+      background-color: #341f97;
     }
 
     .double-button,
@@ -119,48 +113,27 @@
       width: 100%;
     }
 
-    .action-buttons {
+    .action-buttons, .player-manage-buttons {
       display: flex;
       justify-content: space-between;
       gap: 6px;
-    }
-
-    .player-manage-buttons {
-      display: flex;
-      justify-content: space-between;
-      gap: 6px;
-    }
-
-    @media (max-width: 768px) {
-      .main-container {
-        flex-direction: column;
-        align-items: center;
-      }
-      .button-panel-column {
-        width: 100%;
-      }
     }
   </style>
 </head>
 <body>
 
-<div class="main-container">
-  <div class="players-column" id="players"></div>
-
-  <div class="button-panel-column">
-    <div class="button-grid" id="buttonGrid"></div>
-    <div class="double-button">
-      <button onclick="doubleQueue()">×2</button>
-    </div>
-    <div class="action-buttons">
-      <button onclick="undo()">↩️ Undo</button>
-      <button onclick="resetAll()">🔄 Reset</button>
-    </div>
-    <div class="player-manage-buttons">
-      <button onclick="addPlayer()">➕ Add Player</button>
-      <button onclick="deletePlayer()">🗑️ Delete Player</button>
-    </div>
-  </div>
+<div class="players-column" id="players"></div>
+<div class="button-grid" id="buttonGrid"></div>
+<div class="double-button">
+  <button onclick="doubleQueue()">×2</button>
+</div>
+<div class="action-buttons">
+  <button onclick="undo()">↩️ Undo</button>
+  <button onclick="resetAll()">🔄 Reset</button>
+</div>
+<div class="player-manage-buttons">
+  <button onclick="addPlayer()">➕ Add Player</button>
+  <button onclick="deletePlayer()">🗑️ Delete Player</button>
 </div>
 
 <script>
@@ -197,7 +170,10 @@
     for (let i = 1; i <= 12; i++) {
       const btn = document.createElement("button");
       btn.textContent = i;
-      btn.onclick = () => addToQueue(i);
+      btn.onclick = () => {
+        addToQueue(i);
+        if (navigator.vibrate) navigator.vibrate(30);
+      };
       grid.appendChild(btn);
     }
   }
@@ -208,6 +184,7 @@
   }
 
   function doubleQueue() {
+    if (navigator.vibrate) navigator.vibrate(50);
     queue = queue.map(x => x * 2);
     updateQueuedDisplay();
   }
@@ -228,6 +205,7 @@
       queue = [];
       currentPlayer = (currentPlayer + 1) % playerNames.length;
       renderPlayers();
+      renderButtons();
     }
   }
 
@@ -257,7 +235,9 @@
 
   function selectPlayer(i) {
     currentPlayer = i;
+    queue = [];
     renderPlayers();
+    renderButtons();
   }
 
   function addPlayer() {
@@ -267,6 +247,7 @@
       scores.push(0);
       history.push([]);
       renderPlayers();
+      renderButtons();
     }
   }
 
@@ -277,6 +258,7 @@
       history.splice(currentPlayer, 1);
       currentPlayer = currentPlayer % playerNames.length;
       renderPlayers();
+      renderButtons();
     } else {
       alert("At least one player must remain.");
     }
