@@ -5,10 +5,7 @@
   <title>Score Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #f7faff;
@@ -69,9 +66,8 @@
     }
 
     .queued-points {
-      font-size: 1.2em;
-      color: #ee9932;
-      font-weight: bold;
+      font-size: 1em;
+      color: #27ae60;
       line-height: 1;
     }
 
@@ -84,23 +80,11 @@
       min-width: 44px;
     }
 
-    .btn-add {
-      background-color: #e17055;
-      color: white;
-    }
+    .btn-add { background-color: #e17055; color: white; }
+    .btn-add:hover { background-color: #d35400; }
 
-    .btn-add:hover {
-      background-color: #d35400;
-    }
-
-    .btn-delete {
-      background-color: #636e72;
-      color: white;
-    }
-
-    .btn-delete:hover {
-      background-color: #2d3436;
-    }
+    .btn-delete { background-color: #636e72; color: white; }
+    .btn-delete:hover { background-color: #2d3436; }
 
     .button-grid {
       display: grid;
@@ -111,7 +95,8 @@
 
     .button-grid button,
     .double-button button,
-    .action-buttons button {
+    .action-buttons button,
+    .player-manage-buttons button {
       font-size: 1.1em;
       padding: 10px;
       border-radius: 10px;
@@ -123,16 +108,24 @@
 
     .button-grid button:hover,
     .double-button button:hover,
-    .action-buttons button:hover {
+    .action-buttons button:hover,
+    .player-manage-buttons button:hover {
       background-color: #4834d4;
     }
 
     .double-button,
-    .action-buttons {
+    .action-buttons,
+    .player-manage-buttons {
       width: 100%;
     }
 
     .action-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .player-manage-buttons {
       display: flex;
       justify-content: space-between;
       gap: 6px;
@@ -143,17 +136,8 @@
         flex-direction: column;
         align-items: center;
       }
-
       .button-panel-column {
         width: 100%;
-      }
-
-      .action-buttons {
-        flex-direction: row;
-      }
-
-      .action-buttons button {
-        flex: 1;
       }
     }
   </style>
@@ -172,23 +156,24 @@
       <button onclick="undo()">↩️ Undo</button>
       <button onclick="resetAll()">🔄 Reset</button>
     </div>
+    <div class="player-manage-buttons">
+      <button onclick="addPlayer()">➕ Add Player</button>
+      <button onclick="deletePlayer()">🗑️ Delete Player</button>
+    </div>
   </div>
 </div>
 
 <script>
-  const playerNames = ['Alica', 'Bernd', 'Jonas', 'Mattis'];
-  const numPlayers = playerNames.length;
-
-  let scores = Array(numPlayers).fill(0);
+  let playerNames = ['Alica', 'Bernd', 'Jonas', 'Mattis'];
+  let scores = playerNames.map(() => 0);
   let queue = [];
-  let history = Array(numPlayers).fill().map(() => []);
+  let history = playerNames.map(() => []);
   let currentPlayer = 0;
 
   function renderPlayers() {
     const container = document.getElementById("players");
     container.innerHTML = '';
-
-    for (let i = 0; i < numPlayers; i++) {
+    for (let i = 0; i < playerNames.length; i++) {
       const div = document.createElement("div");
       div.className = "player" + (i === currentPlayer ? " selected" : "");
       div.onclick = () => selectPlayer(i);
@@ -203,7 +188,6 @@
       `;
       container.appendChild(div);
     }
-
     updateQueuedDisplay();
   }
 
@@ -229,7 +213,7 @@
   }
 
   function updateQueuedDisplay() {
-    for (let i = 0; i < numPlayers; i++) {
+    for (let i = 0; i < playerNames.length; i++) {
       const el = document.getElementById(`queued${i}`);
       el.innerText = (i === currentPlayer && queue.length > 0) ? '+ ' + queue.join(' + ') : '';
     }
@@ -242,7 +226,7 @@
       scores[currentPlayer] += total;
       history[currentPlayer].push([...queue]);
       queue = [];
-      currentPlayer = (currentPlayer + 1) % numPlayers;
+      currentPlayer = (currentPlayer + 1) % playerNames.length;
       renderPlayers();
     }
   }
@@ -265,8 +249,8 @@
   }
 
   function resetAll() {
-    scores = Array(numPlayers).fill(0);
-    history = Array(numPlayers).fill().map(() => []);
+    scores = playerNames.map(() => 0);
+    history = playerNames.map(() => []);
     queue = [];
     renderPlayers();
   }
@@ -274,6 +258,28 @@
   function selectPlayer(i) {
     currentPlayer = i;
     renderPlayers();
+  }
+
+  function addPlayer() {
+    const newName = window.prompt("Enter new player name:");
+    if (newName && newName.trim().length > 0) {
+      playerNames.push(newName.trim());
+      scores.push(0);
+      history.push([]);
+      renderPlayers();
+    }
+  }
+
+  function deletePlayer() {
+    if (playerNames.length > 1) {
+      playerNames.splice(currentPlayer, 1);
+      scores.splice(currentPlayer, 1);
+      history.splice(currentPlayer, 1);
+      currentPlayer = currentPlayer % playerNames.length;
+      renderPlayers();
+    } else {
+      alert("At least one player must remain.");
+    }
   }
 
   renderPlayers();
