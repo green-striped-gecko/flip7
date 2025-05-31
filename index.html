@@ -13,7 +13,6 @@
       margin: 0;
       padding: 10px;
     }
-
     .players-column {
       display: flex;
       flex-direction: column;
@@ -21,7 +20,6 @@
       width: 100%;
       max-width: 500px;
     }
-
     .player {
       border: 2px solid #ccc;
       border-radius: 10px;
@@ -31,38 +29,32 @@
       flex-direction: column;
       gap: 6px;
     }
-
     .player.selected {
       border-color: #3498db;
       background-color: #e8f4fd;
     }
-
     .player-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       width: 100%;
     }
-
     .player-info {
       flex-grow: 1;
       font-size: 0.95em;
       text-align: left;
       padding: 0 10px;
     }
-
     .score-line {
       font-size: 1.5em;
       font-weight: bold;
       line-height: 1;
     }
-
     .queued-points {
       font-size: 1em;
       color: #27ae60;
       line-height: 1;
     }
-
     .btn-action {
       font-size: 1.2em;
       padding: 10px;
@@ -71,13 +63,10 @@
       cursor: pointer;
       min-width: 44px;
     }
-
     .btn-add { background-color: #e17055; color: white; }
     .btn-add:hover { background-color: #d35400; }
-
     .btn-delete { background-color: #636e72; color: white; }
     .btn-delete:hover { background-color: #2d3436; }
-
     .button-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -85,7 +74,6 @@
       width: 100%;
       margin-top: 6px;
     }
-
     .button-grid button,
     .action-buttons button,
     .player-manage-buttons button {
@@ -98,19 +86,16 @@
       cursor: pointer;
       transition: transform 0.1s ease, box-shadow 0.2s ease;
     }
-
     .button-grid button:active,
     .action-buttons button:active,
     .player-manage-buttons button:active {
       transform: scale(0.93);
       box-shadow: 0 0 0 4px #a29bfe;
     }
-
     .double-button {
       width: 100%;
       margin-top: 6px;
     }
-
     .double-button button {
       background-color: #00b894;
       font-size: 1.1em;
@@ -121,7 +106,6 @@
       border: none;
       cursor: pointer;
     }
-
     .action-buttons, .player-manage-buttons {
       display: flex;
       justify-content: space-between;
@@ -171,7 +155,7 @@
             <div class="score-line" id="score${i}">${scores[i]}</div>
             <div class="queued-points" id="queued${i}"></div>
           </div>
-          <button class="btn-action btn-add" onclick="applyPoints(event)">+</button>
+          <button class="btn-action btn-add" onclick="applyPoints(event); playClick();">+</button>
         </div>
       `;
 
@@ -183,7 +167,6 @@
           btn.textContent = j;
           btn.onclick = (e) => {
             e.stopPropagation();
-            playClick();
             addToQueue(j);
           };
           buttonGrid.appendChild(btn);
@@ -192,7 +175,13 @@
 
         const doubleBtn = document.createElement("div");
         doubleBtn.className = "double-button";
-        doubleBtn.innerHTML = `<button onclick="doubleQueue()">×2</button>`;
+        const btn2 = document.createElement("button");
+        btn2.textContent = "×2";
+        btn2.onclick = (e) => {
+          e.stopPropagation();
+          wrapDouble();
+        };
+        doubleBtn.appendChild(btn2);
         div.appendChild(doubleBtn);
       }
 
@@ -207,29 +196,53 @@
   }
 
   function addToQueue(val) {
-    queue.push(val);
+    if (Array.isArray(queue)) {
+      queue.push(val);
+    } else if (queue && queue.type === 'x2') {
+      queue = [queue, val];
+    } else {
+      queue = [val];
+    }
     updateQueuedDisplay();
   }
 
-  function doubleQueue() {
-    playClick();
-    queue = queue.map(x => x * 2);
+  function wrapDouble() {
+    if (Array.isArray(queue) && queue.length > 0) {
+      const valuesToDouble = [...queue];
+      queue = [{ type: 'x2', values: valuesToDouble }];
+    }
     updateQueuedDisplay();
+  }
+
+  function flattenQueue(q) {
+    return q.reduce((sum, item) => {
+      if (typeof item === 'number') return sum + item;
+      if (item.type === 'x2') return sum + 2 * item.values.reduce((a, b) => a + b, 0);
+      return sum;
+    }, 0);
+  }
+
+  function displayQueue(q) {
+    return q.map(item => {
+      if (typeof item === 'number') return item;
+      if (item.type === 'x2') return `2×(${item.values.join(' + ')})`;
+      return '';
+    }).join(' + ');
   }
 
   function updateQueuedDisplay() {
     for (let i = 0; i < playerNames.length; i++) {
       const el = document.getElementById(`queued${i}`);
-      el.innerText = (i === currentPlayer && queue.length > 0) ? '+ ' + queue.join(' + ') : '';
+      el.innerText = (i === currentPlayer) ? '+ ' + displayQueue(queue) : '';
     }
   }
 
   function applyPoints(e) {
     e.stopPropagation();
-    const total = queue.reduce((a, b) => a + b, 0);
+    const total = flattenQueue(queue);
     if (total > 0) {
       scores[currentPlayer] += total;
-      history[currentPlayer].push([...queue]);
+      history[currentPlayer].push(JSON.parse(JSON.stringify(queue)));
       queue = [];
       currentPlayer = (currentPlayer + 1) % playerNames.length;
       renderPlayers();
@@ -239,7 +252,13 @@
   function deleteLast(e) {
     e.stopPropagation();
     if (queue.length > 0) {
-      queue.pop();
+      const last = queue[queue.length - 1];
+      if (typeof last === 'number') {
+        queue.pop();
+      } else if (last.type === 'x2' && last.values.length > 0) {
+        last.values.pop();
+        if (last.values.length === 0) queue.pop();
+      }
       updateQueuedDisplay();
     }
   }
@@ -247,7 +266,7 @@
   function undo() {
     if (history[currentPlayer].length > 0) {
       const last = history[currentPlayer].pop();
-      const sum = last.reduce((a, b) => a + b, 0);
+      const sum = flattenQueue(last);
       scores[currentPlayer] -= sum;
       renderPlayers();
     }
@@ -290,6 +309,5 @@
 
   renderPlayers();
 </script>
-
 </body>
 </html>
