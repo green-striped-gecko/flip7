@@ -135,6 +135,18 @@
       list-style: none;
       padding: 0;
     }
+    table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
   </style>
 </head>
 <body>
@@ -154,19 +166,22 @@
 <div id="statsPage" class="hidden">
   <div class="stats">
     <h3>Statistics</h3>
-    <table style="width: 100%; border-collapse: collapse;">
-      <thead>
-        <tr style="background-color: #f0f0f0;">
-          <th style="padding: 8px; border: 1px solid #ccc;">Player</th>
-          <th style="padding: 8px; border: 1px solid #ccc;">Total Score</th>
-          <th style="padding: 8px; border: 1px solid #ccc;">Wins</th>
-          <th style="padding: 8px; border: 1px solid #ccc;">Highest Round</th>
-        </tr>
-      </thead>
-      <tbody id="statsList"></tbody>
-    </table>
-    <div style="text-align:center; margin-top: 10px;"><strong>Games Played:</strong> <span id="gamesPlayedStat">0</span></div>
+    <table>
+  <thead>
+    <tr>
+      <th>Player</th>
+      <th>Total Score</th>
+      <th>Wins</th>
+      <th>Highest Round</th>
+    </tr>
+  </thead>
+  <tbody id="statsList"></tbody>
+</table>
+<div style="text-align:center; margin-top:10px;">
+  <strong>Games Played:</strong> <span id="gamesPlayedStat">0</span>
+</div>
   </div>
+</div>
 <div class="nav-buttons">
   <button onclick="showGame()">🏠 Game</button>
   <button onclick="showStats()">📊 Stats</button>
@@ -195,24 +210,24 @@
     renderStats();
   }
   function renderStats() {
-    const statsList = document.getElementById("statsList");
-    const gamesPlayedStat = document.getElementById("gamesPlayedStat");
-    statsList.innerHTML = "";
-    gamesPlayedStat.textContent = gamesPlayed;
-    playerNames.forEach((name, i) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td style='padding: 8px; border: 1px solid #ccc;'>${name}</td>
-        <td style='padding: 8px; border: 1px solid #ccc;'>${totalScores[i]}</td>
-        <td style='padding: 8px; border: 1px solid #ccc;'>${wins[i]}</td>
-        <td style='padding: 8px; border: 1px solid #ccc;'>${maxRoundPoints[i]}</td>
-      `;
-      statsList.appendChild(row);
-    });</strong> ${gamesPlayed}</li>`;
-    playerNames.forEach((name, i) => {
-      ul.innerHTML += `<li><strong>${name}</strong> - Total Score: ${totalScores[i]}, Wins: ${wins[i]}, Highest Round: ${maxRoundPoints[i]}</li>`;
-    });
-  }
+  const statsList = document.getElementById("statsList");
+  const gamesPlayedStat = document.getElementById("gamesPlayedStat");
+
+  statsList.innerHTML = "";
+  gamesPlayedStat.textContent = gamesPlayed;
+
+  playerNames.forEach((name, i) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${name}</td>
+      <td>${totalScores[i]}</td>
+      <td>${wins[i]}</td>
+      <td>${maxRoundPoints[i]}</td>
+    `;
+    statsList.appendChild(row);
+  });
+}
+
 
   function updateRoundDisplay() {
     document.getElementById("roundDisplay").innerText = `Round: ${round}`;
