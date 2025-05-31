@@ -14,13 +14,6 @@
       padding: 10px;
     }
 
-    .main-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-
     .players-column {
       display: flex;
       flex-direction: column;
@@ -87,14 +80,13 @@
 
     .button-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 6px;
       width: 100%;
       margin-top: 6px;
     }
 
     .button-grid button,
-    .double-button button,
     .action-buttons button,
     .player-manage-buttons button {
       font-size: 1.1em;
@@ -108,32 +100,42 @@
     }
 
     .button-grid button:active,
-    .double-button button:active,
     .action-buttons button:active,
     .player-manage-buttons button:active {
       transform: scale(0.93);
       box-shadow: 0 0 0 4px #a29bfe;
     }
 
-    .double-button,
-    .action-buttons,
-    .player-manage-buttons {
+    .double-button {
       width: 100%;
+      margin-top: 6px;
+    }
+
+    .double-button button {
+      background-color: #00b894;
+      font-size: 1.1em;
+      padding: 10px;
+      border-radius: 10px;
+      width: 100%;
+      color: white;
+      border: none;
+      cursor: pointer;
     }
 
     .action-buttons, .player-manage-buttons {
       display: flex;
       justify-content: space-between;
       gap: 6px;
+      width: 100%;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
+<audio id="clickSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+
 <div class="players-column" id="players"></div>
-<div class="double-button">
-  <button onclick="doubleQueue()">×2</button>
-</div>
 <div class="action-buttons">
   <button onclick="undo()">↩️ Undo</button>
   <button onclick="resetAll()">🔄 Reset</button>
@@ -149,6 +151,8 @@
   let queue = [];
   let history = playerNames.map(() => []);
   let currentPlayer = 0;
+
+  const clickSound = document.getElementById("clickSound");
 
   function renderPlayers() {
     const container = document.getElementById("players");
@@ -179,16 +183,27 @@
           btn.textContent = j;
           btn.onclick = (e) => {
             e.stopPropagation();
+            playClick();
             addToQueue(j);
           };
           buttonGrid.appendChild(btn);
         }
         div.appendChild(buttonGrid);
+
+        const doubleBtn = document.createElement("div");
+        doubleBtn.className = "double-button";
+        doubleBtn.innerHTML = `<button onclick="doubleQueue()">×2</button>`;
+        div.appendChild(doubleBtn);
       }
 
       container.appendChild(div);
     }
     updateQueuedDisplay();
+  }
+
+  function playClick() {
+    clickSound.currentTime = 0;
+    clickSound.play();
   }
 
   function addToQueue(val) {
@@ -197,6 +212,7 @@
   }
 
   function doubleQueue() {
+    playClick();
     queue = queue.map(x => x * 2);
     updateQueuedDisplay();
   }
